@@ -58,3 +58,59 @@ Mostly specific to Mac OS X but should work on Windows and Linux as well.
   - connect masters
   - create slaves
   - create jobs
+  
+
+## Cluster Configurations Steps
+
+#### Operations Center
+- Set master executor count to 2, label = `master` and usage is 
+`Only build jobs with label restrictions matching this node` to prevent jobs 
+running on the master
+- set `Jenkiks URL` to the external host address, ie `http://jenkins.beedemo.local/`
+- enable Security
+- Configure jnlp port to 4001
+- Access control: `Jenkin's own user database`
+- Authorization: Initially set to `Anyone can do anything` until you are ready to configure users and roles
+- Client Master security: `Single Sign-on (security realm and authorization strategy)`
+- Do not enable CSRF on the Operations Center as this causes issues with Analytics
+- Set up Analytcis
+    - ReportinG Endpoint: `http://jenkins.beedemo.local/feeder`
+    - Use `Remote Elasticsearch Instance(s)
+    - Elastic Search URLs: `http://jenkins.beedemo.local:9200`
+    - 
+    
+- Create Updated Centers
+    - Test Plugins - upstream is `Jenkins Enterprise by CloudBees`
+    - Approved Plugins - upstream is `Test Plugins`
+    - In both, promote the default plugins installed as part of CloudBees Jenkins Enterprise install
+    - Set up a `cluster operation` to pull metadata and new versions from upstreams
+ 
+#### api-team master
+- Set master executor count to 2, label = `master` and usage is 
+`Only build jobs with label restrictions matching this node` to prevent jobs 
+running on the master
+- set `Jenkiks URL` to the external host address, ie `http://jenkins.beedemo.local/api-team`
+- sshd port = 4012
+- enable Security
+- Configure jnlp port to 4002
+- from operations center, attach the client master
+
+ 
+
+
+#### mobile-team master
+- Set master executor count to 2, label = `master` and usage is 
+`Only build jobs with label restrictions matching this node` to prevent jobs 
+running on the master
+- set `Jenkiks URL` to the external host address, ie `http://jenkins.beedemo.local/mobile-team`
+- sshd port = 4013
+- enable Security
+- Configure jnlp port to 4003
+- from operations center, attach the client master
+    - Enable Analytics Reporting
+    - License Strategy: `License (floating dedicated executors)`
+    - Update Center = `Approved Plugins`
+
+ 
+
+

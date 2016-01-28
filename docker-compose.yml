@@ -1,19 +1,22 @@
 joc1:
-    image: harniman/jenkins-operations-center:1.609.1.1-1
+    image: harniman/jenkins-operations-center:1.609.15.1-1
     command: --prefix=""
     ports:
         - "81:8080"
     volumes:
-        - data:/data
+        - ./data:/data
     links:
         - slave1
         - slave2
+        - slave3
+        - slave4
         - slaveDocker1
+#        - elasticsearch
     environment:
         - JENKINS_HOME=/data/var/lib/jenkins/joc
     restart: always
 joc2:
-    image: harniman/jenkins-operations-center:1.609.1.1-1
+    image: harniman/jenkins-operations-center:1.609.15.1-1
     command: --prefix=""
     ports:
         - "82:8080"
@@ -22,12 +25,15 @@ joc2:
     links:
         - slave1
         - slave2
+        - slave3
+        - slave4
         - slaveDocker1
+#        - elasticsearch
     environment:
         - JENKINS_HOME=/data/var/lib/jenkins/joc
     restart: always
 apiTeam1:
-    image: harniman/jenkins-enterprise:c-1.609.1.1-1
+    image: harniman/jenkins-enterprise:1.609.15.1-1
     ports:
         - "83:8080"
     volumes_from:
@@ -36,13 +42,15 @@ apiTeam1:
         - ambassador:jenkins.beedemo.local
         - slave1
         - slave2
+        - slave3
+        - slave4
         - slaveDocker1
     environment:
         - JENKINS_HOME=/data/var/lib/jenkins/api-team
         - JENKINS_PREFIX=/api-team
     restart: always
 apiTeam2:
-    image: harniman/jenkins-enterprise:c-1.609.1.1-1
+    image: harniman/jenkins-enterprise:1.609.15.1-1
     ports:
         - "84:8080"
     volumes_from:
@@ -52,13 +60,15 @@ apiTeam2:
         - ambassador:jenkins.beedemo.local
         - slave1
         - slave2
+        - slave3
+        - slave4
         - slaveDocker1
     environment:
         - JENKINS_HOME=/data/var/lib/jenkins/api-team
         - JENKINS_PREFIX=/api-team
     restart: always
 mobileTeam1:
-    image: harniman/jenkins-enterprise:c-1.609.1.1-1
+    image: harniman/jenkins-enterprise:1.609.15.1-1
     ports:
         - "85:8080"
     volumes_from:
@@ -67,13 +77,15 @@ mobileTeam1:
         - ambassador:jenkins.beedemo.local
         - slave1
         - slave2
+        - slave3
+        - slave4
         - slaveDocker1
     environment:
         - JENKINS_HOME=/data/var/lib/jenkins/mobile-team
         - JENKINS_PREFIX=/mobile-team
     restart: always
 mobileTeam2:
-    image: harniman/jenkins-enterprise:c-1.609.1.1-1
+    image: harniman/jenkins-enterprise:1.609.15.1-1
     ports:
         - "86:8080"
     volumes_from:
@@ -83,16 +95,20 @@ mobileTeam2:
         - ambassador:jenkins.beedemo.local
         - slave1
         - slave2
+        - slave3
+        - slave4
         - slaveDocker1
     environment:
         - JENKINS_HOME=/data/var/lib/jenkins/mobile-team
         - JENKINS_PREFIX=/mobile-team
     restart: always
-elasticsearch:
-    image: elasticsearch
-    volumes_from:
-        - joc1
-    restart: always
+#elasticsearch:
+#    image: elasticsearch:1.6.1
+# We need to override the command otherwise it tries to chown the data volume    
+#    command: "gosu elasticsearch elasticsearch"
+#    volumes:
+#        - ./data/elasticsearch:/usr/share/elasticsearch/data
+#    restart: always
 proxy:
     image: kmadel/haproxy:1.0
     ports:
@@ -100,6 +116,10 @@ proxy:
         - "9000:9000"
         - "9200:9200"
         - "4001:4001"
+        - "4002:4002"
+        - "4003:4003"
+        - "4012:4012"
+        - "4013:4013"
     expose:
         - "9200"
         - "4001"
@@ -108,15 +128,15 @@ proxy:
         - apiTeam2
         - mobileTeam2
     volumes:
-        - data/haproxy:/haproxy-override
+        - ./data/haproxy:/haproxy-override
     links:
+#        - elasticsearch:elasticsearch
         - joc1
         - joc2
         - apiTeam1
         - apiTeam2
         - mobileTeam1
         - mobileTeam2
-        - elasticsearch
     restart: always
 ambassador:
   image: cpuguy83/docker-grand-ambassador
@@ -126,29 +146,39 @@ ambassador:
 slave1:
     image: kmadel/jenkins-slave:1.0
     volumes:
-        - data:/data
+        - ./data:/data
+    links:
+        - ambassador:jenkins.beedemo.local
     restart: always
 slave2:
     image: kmadel/jenkins-slave:1.0
     volumes:
-        - data:/data
+        - ./data:/data
+    links:
+        - ambassador:jenkins.beedemo.local
     restart: always
 slave3:
     image: kmadel/jenkins-slave:1.0
     volumes:
-        - data:/data
+        - ./data:/data
+    links:
+        - ambassador:jenkins.beedemo.local
     restart: always
 slave4:
     image: kmadel/jenkins-slave:1.0
     volumes:
-        - data:/data
+        - ./data:/data
+    links:
+        - ambassador:jenkins.beedemo.local
     restart: always
 slaveDocker1:
     image: tehranian/dind-jenkins-slave
     volumes:
-        - data:/data
+        - ./data:/data
     environment:
         - PORT=1234
     privileged: true
+    links:
+        - ambassador:jenkins.beedemo.local
     restart: always
     
